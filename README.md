@@ -1,7 +1,7 @@
 CHIPS Core integration/staging tree
 =====================================
 
-What is Chips?
+What is CHIPS?
 ----------------
 
 CHIPS is a digital crypto currency which is used across all the gaming platforms 
@@ -15,11 +15,13 @@ Core is the name of open source software which enables the use of this currency.
 For more information, read the [original whitepaper](https://cdn.discordapp.com/attachments/455737840668770315/456036359870611457/Unsolicited_PANGEA_WP.pdf). <br/>
 The first post about CHIPS by jl777 in [bitcointalk](https://bitcointalk.org/index.php?topic=2078449.0).
 
-License
--------
+What is Pangea Procol?
+----------------------
 
-CHIPS Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
+You can find more details and implementation of Pangea protocol in the [bet repo](https://github.com/chips-blockchain/bet.git). 
+A fully dencentralized privacy preserving poker game is developed using the Pangea protocol and that uses CHIPS crypto currency for
+real time betting and to play the game. The backend implementation of the poker game is been developing in the `bet repo` and front end 
+development is happening in the [pangea-poker repo](https://github.com/chips-blockchain/pangea-poker).
 
 Development Process
 -------------------
@@ -39,3 +41,8 @@ CHIPS Community - Discord
 
 We have an active [discord channel](https://discord.gg/tV7ADNE) where you can get to know more about CHIPS.
 
+License
+-------
+
+CHIPS Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+information or see https://opensource.org/licenses/MIT.
