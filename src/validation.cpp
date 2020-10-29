@@ -2260,6 +2260,15 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
     CBlock& block = *pblock;
     if (!ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()))
         return AbortNode(state, "Failed to read block");
+    
+    int32_t prevMoMheight; uint256 notarizedhash,txid;
+    komodo_notarized_height(&prevMoMheight,&notarizedhash,&txid);
+    if ( block.GetHash() == notarizedhash )
+    {
+        LogPrintf("DisconnectTip trying to disconnect notarized block at ht.%d\n",(int32_t)pindexDelete->nHeight);
+        return(false);
+    }
+    
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
@@ -3013,6 +3022,15 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
+    if ( chainActive.Height() > consensusParams.nAdaptivePoWActivationThreshold )
+    {
+        if (block.GetBlockTime() > GetAdjustedTime() + 4)
+        {
+            // LogPrintf("CheckBlockHeader block from future %d error",block.GetBlockTime() - GetAdjustedTime());
+            return state.DoS(50, false, REJECT_INVALID, "block-from-future", false, "CheckBlockHeader block from future");
+        }
+    }
+    
     return true;
 }
 
@@ -3162,6 +3180,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
+    // LogPrintf(" [apow test] === ContextualCheckBlockHeader: block.nBits = %d GetNextWorkRequired = %d\n", block.nBits, GetNextWorkRequired(pindexPrev, &block, consensusParams));
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
 
@@ -3185,9 +3204,20 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
         }
     }
 
-    // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
-        return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
+    if ( pindexPrev->nHeight + 1 <= consensusParams.nAdaptivePoWActivationThreshold || nHeight < 30 )
+    {
+        // Check timestamp against prev
+        if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
+            return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
+    }
+    else    { // apow
+        if ( block.GetBlockTime() <= pindexPrev->nTime )
+        {
+            fprintf(stderr,"ht.%d too early2 %u vs %u\n",(int32_t)nHeight,(uint32_t)block.GetBlockTime(),(uint32_t)pindexPrev->nTime);
+            return state.Invalid(error("%s: block's timestamp is too early2", __func__),
+                                 REJECT_INVALID, "time-too-old");
+        }
+    }
 
     // Check timestamp
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
@@ -3331,7 +3361,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
                     {
                         pindex->nStatus |= BLOCK_FAILED_MASK;
                         fprintf(stderr,"known block.%d found invalid prevblock\n",(int32_t)pindex->nHeight);
-                        return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+                        return state.DoS(100, error("%s: prev block invalid 1", __func__), REJECT_INVALID, "bad-prevblk");
                     }
                 }
                 if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
@@ -3354,7 +3384,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
             return state.DoS(10, error("%s: prev block not found", __func__), 0, "prev-blk-not-found");
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
-            return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+            return state.DoS(100, error("%s: prev block invalid 2", __func__), REJECT_INVALID, "bad-prevblk");
         if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
@@ -3368,7 +3398,7 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
                         setDirtyBlockIndex.insert(invalid_walk);
                         invalid_walk = invalid_walk->pprev;
                     }
-                    return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+                    return state.DoS(100, error("%s: prev block invalid 3", __func__), REJECT_INVALID, "bad-prevblk");
                 }
             }
         }
