@@ -1,4 +1,5 @@
 ### Steps to build chips-qt wallet for windows 
+
 ```
 sudo apt-get install build-essential pkg-config libc6-dev m4 g++-multilib autoconf libtool ncurses-dev unzip git python python-zmq zlib1g-dev wget libcurl4-gnutls-dev bsdmainutils automake curl libsodium-dev
 sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils python3
@@ -35,5 +36,78 @@ cd ..
 
 ./autogen.sh
 ./configure --prefix=$(pwd)/depends/x86_64-w64-mingw32 LDFLAGS="-L${CHIPS_PREFIX}/lib/" CPPFLAGS="-I${CHIPS_PREFIX}/include/" --with-gui=yes --disable-tests --disable-bench --without-miniupnpc --enable-experimental-asm --enable-static --disable-shared
+make -j$(nproc)
+```
+
+### ARM64 - without QT wallet - Only CLI binaries
+
+```
+# https://github.com/bitcoin/bitcoin/blob/master/doc/build-unix.md#arm-cross-compilation
+
+sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+sudo apt-get install libqrencode-dev
+sudo apt-get install libminiupnpc-dev
+sudo apt-get install libzmq3-dev
+sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+
+cd ~
+git clone https://github.com/chips-blockchain/chips
+
+cd chips/depends
+make HOST=aarch64-linux-gnu -j$(nproc)
+cd ..
+./autogen.sh
+./configure --prefix=$(pwd)/depends/aarch64-linux-gnu LDFLAGS="-L${CHIPS_PREFIX}/lib/" CPPFLAGS="-I${CHIPS_PREFIX}/include/" --with-gui=no --disable-tests --disable-bench --enable-upnp-default --enable-experimental-asm --enable-static --disable-shared
+make -j$(nproc)
+```
+### ARM32 - without QT wallet - Only CLI binaries
+
+```
+# https://github.com/bitcoin/bitcoin/blob/master/doc/build-unix.md#arm-cross-compilation
+
+sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+sudo apt-get install libqrencode-dev
+sudo apt-get install libminiupnpc-dev
+sudo apt-get install libzmq3-dev
+sudo apt-get install g++-arm-linux-gnueabihf curl
+
+
+cd ~
+git clone https://github.com/chips-blockchain/chips
+cd chips/depends
+make HOST=arm-linux-gnueabihf -j$(nproc)
+cd ..
+./autogen.sh
+./configure --prefix=$(pwd)/depends/arm-linux-gnueabihf LDFLAGS="-L${CHIPS_PREFIX}/lib/" CPPFLAGS="-I${CHIPS_PREFIX}/include/" --with-gui=no --disable-tests --disable-bench --enable-upnp-default --enable-experimental-asm --enable-static --disable-shared
+make -j$(nproc)
+```
+
+### For Linux static builds, AMD64 - QT wallet
+
+```
+# https://github.com/bitcoin/bitcoin/blob/master/doc/build-unix.md#arm-cross-compilation
+
+sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+sudo apt-get install libqrencode-dev
+sudo apt-get install libminiupnpc-dev
+sudo apt-get install libzmq3-dev
+sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+
+
+cd ~
+git clone https://github.com/chips-blockchain/chips
+
+To build dependencies for the current arch+OS:
+
+cd chips/depends
+make
+cd ..
+
+For 64bit Linux, it might make a dependency path something like `depends/x86_64-pc-linux-gnu`. Or better check the `depends/` directory and use that as path for your arch+OS.
+So, based on 64bit linux can use `--prefix=$(pwd)/depends/x86_64-pc-linux-gnu`
+
+
+./autogen.sh
+./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu LDFLAGS="-L${CHIPS_PREFIX}/lib/" CPPFLAGS="-I${CHIPS_PREFIX}/include/" --with-gui=no --disable-tests --disable-bench --enable-upnp-default --enable-experimental-asm --enable-static --disable-shared
 make -j$(nproc)
 ```
