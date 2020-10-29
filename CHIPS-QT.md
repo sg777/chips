@@ -111,3 +111,20 @@ So, based on 64bit linux can use `--prefix=$(pwd)/depends/x86_64-pc-linux-gnu`
 ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu LDFLAGS="-L${CHIPS_PREFIX}/lib/" CPPFLAGS="-I${CHIPS_PREFIX}/include/" --with-gui=no --disable-tests --disable-bench --enable-upnp-default --enable-experimental-asm --enable-static --disable-shared
 make -j$(nproc)
 ```
+
+### For Linux static builds - without QT wallet - Only CLI binaries
+
+```
+cd
+git clone https://github.com/chips-blockchain/chips.git
+cd ~/chips
+./autogen.sh
+./configure --with-boost=/usr/local/
+cd src
+make -j8 chipsd
+make chips-cli
+cp chips-cli /usr/bin # just need to get chips-cli to work from command line
+# make -> will build everything, including QT wallet
+sudo ldconfig /usr/local/lib # thanks smaragda!
+./chipsd -addnode=5.9.253.195 &
+```
