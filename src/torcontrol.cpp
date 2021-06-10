@@ -430,6 +430,7 @@ private:
     struct event *reconnect_ev;
     float reconnect_timeout;
     CService service;
+	const CService m_target;
     /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> cookie;
     /** ClientNonce for SAFECOOKIE auth */
