@@ -28,6 +28,11 @@ enum Network
 };
 
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
+
+/// Size of TORv3 address (in bytes). This is the length of just the address
+/// as used in BIP155, without the checksum and the version byte.
+static constexpr size_t ADDR_TORV3_SIZE = 32;
+
 class CNetAddr
 {
     protected:
@@ -97,6 +102,17 @@ class CNetAddr
         }
 
         friend class CSubNet;
+		
+		private:
+			/**
+			 * Parse a Tor address and set this object to it.
+			 * @param[in] addr Address to parse, must be a valid C string, for example
+			 * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion.
+			 * @returns Whether the operation was successful.
+			 * @see CNetAddr::IsTor()
+			 */
+			bool SetTor(const std::string& addr);
+
 };
 
 class CSubNet
